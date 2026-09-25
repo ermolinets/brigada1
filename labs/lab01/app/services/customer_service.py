@@ -1,13 +1,6 @@
-# ЛР1: заготовленный сервис. Допишите отмеченный метод и подключите объекты.
 from app.support.types import CheckResult, checked, identifier, choice, boolean, date_only, Repository
-
-
 from app.support.types import name as valid_name, country as valid_country
-
-
 from app.support.errors import DomainError
-
-
 from app.domain.customer import Customer
 
 
@@ -23,7 +16,7 @@ class CustomerService:
         return self._repository.get(key)
 
     def block(self, key):
-        raise NotImplementedError("ЛР1: завершите CustomerService.block")
+        self.get(key).block()
 
     def activate(self, key):
         self.get(key).activate()
@@ -43,52 +36,41 @@ class CustomerService:
         return CheckResult(True)
 
 
-from app.support.types import Repository
-
-
-
-from app.support.types import CheckResult, checked, identifier, choice, boolean, date_only, Repository
-from app.support.types import name as valid_name, country as valid_country
-from app.support.errors import DomainError
-
 def make_entity(customer_id, name, category, online_consent=False):
-    return {'customer_id': customer_id, 'name': name, 'category': category, 'online_consent': online_consent, "status": "ACTIVE"}
+    return Customer(customer_id, name, category, online_consent)
+
 
 def _new_legacy_service(repository):
     return {"repository": repository}
 
+
 def view(entity):
-    return dict(entity)
+    return {
+        "customer_id": entity.customer_id,
+        "name": entity.name,
+        "category": entity.category,
+        "online_consent": entity.online_consent,
+        "status": entity.status,
+    }
+
 
 def invoke(service, method, *args, **kwargs):
-    repository = service["repository"]
     if method == "register":
-        return repository.add(args[0])
-    entity = repository.get(args[0])
+        return service.register(*args, **kwargs)
     if method == "get":
-        return entity
+        return service.get(*args, **kwargs)
     if method == "block":
-        entity["status"] = "BLOCKED"
-        return None
+        return service.block(*args, **kwargs)
     if method == "activate":
-        entity["status"] = "ACTIVE"
-        return None
+        return service.activate(*args, **kwargs)
     if method == "close":
-        entity["status"] = "CLOSED"
-        return None
+        return service.close(*args, **kwargs)
     if method == "check":
-        context = args[1]
-        if entity["status"] != "ACTIVE":
-            return CheckResult(False, "CUSTOMER_" + ("NOT_ACTIVE" if entity["status"] == "NEW" else entity["status"]))
-        if entity["category"] not in {"STANDARD", "PREMIUM"}:
-            return CheckResult(False, "CUSTOMER_CATEGORY_DENIED")
-        if context.operation_type != "PURCHASE":
-            return CheckResult(False, "OPERATION_DENIED")
-        return CheckResult(True)
+        return service.check(*args, **kwargs)
     raise ValueError(method)
 
 
-from app.support.types import Repository
-
 def new_service(repository=None):
-    return _new_legacy_service(repository if repository is not None else Repository("customer_id"))
+    return CustomerService(
+        repository if repository is not None else Repository("customer_id")
+    )
