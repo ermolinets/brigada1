@@ -1,3 +1,5 @@
+# ЛР1: поля, конструктор и служебные проверки даны преподавателем.
+# Завершите отмеченные методы; API пока использует старые функции.
 from app.support.types import CheckResult, checked, identifier, choice, boolean, date_only, Repository
 from app.support.types import name as valid_name, country as valid_country
 from app.support.errors import DomainError
@@ -36,10 +38,14 @@ class Customer:
         return self._status
 
     def block(self):
-        raise NotImplementedError("ЛР1: завершите Customer.block")
+        if self.status != "ACTIVE":
+            raise DomainError("INVALID_STATE")
+        self._status = "BLOCKED"
 
     def activate(self):
-        raise NotImplementedError("ЛР1: завершите Customer.activate")
+        if self.status != "BLOCKED":
+            raise DomainError("INVALID_STATE")
+        self._status = "ACTIVE"
 
     def close(self):
         if self.status not in ('ACTIVE', 'BLOCKED'):
@@ -47,4 +53,8 @@ class Customer:
         self._status = "CLOSED"
 
     def availability(self):
-        raise NotImplementedError("ЛР1: завершите Customer.availability")
+        if self.status == "BLOCKED":
+            return CheckResult(False, "CUSTOMER_BLOCKED")
+        if self.status == "CLOSED":
+            return CheckResult(False, "CUSTOMER_CLOSED")
+        return CheckResult(True)
