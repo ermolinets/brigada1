@@ -6,7 +6,7 @@ from app.support.errors import DomainError
 class Customer:
     def __init__(self, customer_id, name, category, online_consent=False):
         identifier(customer_id)
-        name = name.strip()
+        name = valid_name(name)
         choice(category, ("STANDARD", "PREMIUM", "BUSINESS"), "INVALID_CATEGORY")
         boolean(online_consent)
         self._customer_id = customer_id
@@ -22,6 +22,9 @@ class Customer:
     @property
     def name(self):
         return self._name
+
+    def rename(self, name):
+        self._name = valid_name(name)
 
     @property
     def category(self):
