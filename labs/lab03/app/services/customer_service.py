@@ -1,6 +1,6 @@
 from app.support.types import CheckResult, checked, Repository
 from app.domain.customer import Customer
-from app.domain.eligibility import AllowedCategoryRule, AllowedOperationRule
+from app.domain.eligibility import AllowedCategoryRule, AllowedOperationRule, OnlineConsentRule
 
 class CustomerService:
     def __init__(self, repository, rules=()):
@@ -8,6 +8,7 @@ class CustomerService:
         self._rules = tuple(rules) or (
             AllowedCategoryRule({"STANDARD", "PREMIUM"}),
             AllowedOperationRule({"PURCHASE"}),
+            OnlineConsentRule(),
         )
 
     def register(self, entity):
