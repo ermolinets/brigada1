@@ -25,4 +25,6 @@ class AllowedOperationRule(CustomerEligibilityRule):
             choice(value, ('PURCHASE', 'CASH_WITHDRAWAL'), "INVALID_CONFIG")
 
     def check(self, entity, context):
+        if context.operation_type not in self._values:
+            return CheckResult(False, "OPERATION_DENIED")
         return CheckResult(True)
