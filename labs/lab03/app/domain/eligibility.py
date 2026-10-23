@@ -28,3 +28,9 @@ class AllowedOperationRule(CustomerEligibilityRule):
         if context.operation_type not in self._values:
             return CheckResult(False, "OPERATION_DENIED")
         return CheckResult(True)
+
+class OnlineConsentRule(CustomerEligibilityRule):
+    def check(self, entity, context):
+        if context.channel == "ONLINE" and not entity.online_consent:
+            return CheckResult(False, "ONLINE_CONSENT_REQUIRED")
+        return CheckResult(True)
