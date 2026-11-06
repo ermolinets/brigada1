@@ -7,7 +7,7 @@ from app.domain.eligibility import AllowedCategoryRule, AllowedOperationRule
 class CustomerService:
     def __init__(self, repository, rules=()):
         self._repository = repository
-        self._rules = [AllowedCategoryRule({"STANDARD", "PREMIUM"}), AllowedOperationRule({"PURCHASE"})]  # конкретные объекты пока создаются здесь
+        self._rules = [AllowedCategoryRule({"STANDARD", "PREMIUM"}), AllowedOperationRule({"PURCHASE"})]
 
     def register(self, entity):
         return self._repository.add(entity)
@@ -17,26 +17,21 @@ class CustomerService:
 
     def block(self, key):
         entity = self.get(key)
-        if entity.status not in ('ACTIVE',):
-            raise DomainError("INVALID_STATE")
-        entity._status = "BLOCKED"
+        entity.block()
 
     def activate(self, key):
         entity = self.get(key)
-        if entity.status not in ('BLOCKED',):
-            raise DomainError("INVALID_STATE")
-        entity._status = "ACTIVE"
+        entity.activate()
 
     def close(self, key):
         entity = self.get(key)
-        if entity.status not in ('ACTIVE', 'BLOCKED'):
-            raise DomainError("INVALID_STATE")
-        entity._status = "CLOSED"
+        entity.close()
 
     def check(self, key, context):
         entity = self.get(key)
-        if entity.status != "ACTIVE":
-            return CheckResult(False, "CUSTOMER_" + ("NOT_ACTIVE" if entity.status == "NEW" else entity.status))
+        result = entity.availability()
+        if not result.allowed:
+            return result
         for rule in self._rules:
             result = checked(rule.check(entity, context))
             if not result.allowed:
@@ -44,7 +39,6 @@ class CustomerService:
         return CheckResult(True)
 
     def diagnostic(self, key):
-        self._repository.get(key)
         return self._repository.get(key).name
 
 def make_entity(*args, **kwargs):
