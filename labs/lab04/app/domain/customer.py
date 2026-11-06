@@ -45,6 +45,14 @@ class Customer:
             raise DomainError("INVALID_STATE")
         self._status = "ACTIVE"
 
+    def set_block(self, blocked):
+        boolean(blocked)
+        if blocked and self.status != "BLOCKED":
+            self.block()
+        elif not blocked and self.status != "ACTIVE":
+            self.activate()
+        return self.status == "BLOCKED"
+
     def close(self):
         if self.status not in ('ACTIVE', 'BLOCKED'):
             raise DomainError("INVALID_STATE")
