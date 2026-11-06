@@ -17,21 +17,15 @@ class CustomerService:
 
     def block(self, key):
         entity = self.get(key)
-        if entity.status not in ('ACTIVE',):
-            raise DomainError("INVALID_STATE")
-        entity._status = "BLOCKED"
+        entity.block()
 
     def activate(self, key):
         entity = self.get(key)
-        if entity.status not in ('BLOCKED',):
-            raise DomainError("INVALID_STATE")
-        entity._status = "ACTIVE"
+        entity.activate()
 
     def close(self, key):
         entity = self.get(key)
-        if entity.status not in ('ACTIVE', 'BLOCKED'):
-            raise DomainError("INVALID_STATE")
-        entity._status = "CLOSED"
+        entity.close()
 
     def check(self, key, context):
         entity = self.get(key)
@@ -45,7 +39,6 @@ class CustomerService:
         return CheckResult(True)
 
     def diagnostic(self, key):
-        self._repository.get(key)
         return self._repository.get(key).name
 
 def make_entity(*args, **kwargs):
