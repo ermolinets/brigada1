@@ -7,7 +7,7 @@ from app.domain.eligibility import AllowedCategoryRule, AllowedOperationRule
 class CustomerService:
     def __init__(self, repository, rules=()):
         self._repository = repository
-        self._rules = [AllowedCategoryRule({"STANDARD", "PREMIUM"}), AllowedOperationRule({"PURCHASE"})]  # конкретные объекты пока создаются здесь
+        self._rules = [AllowedCategoryRule({"STANDARD", "PREMIUM"}), AllowedOperationRule({"PURCHASE"})]
 
     def register(self, entity):
         return self._repository.add(entity)
@@ -35,8 +35,9 @@ class CustomerService:
 
     def check(self, key, context):
         entity = self.get(key)
-        if entity.status != "ACTIVE":
-            return CheckResult(False, "CUSTOMER_" + ("NOT_ACTIVE" if entity.status == "NEW" else entity.status))
+        result = entity.availability()
+        if not result.allowed:
+            return result
         for rule in self._rules:
             result = checked(rule.check(entity, context))
             if not result.allowed:

@@ -51,14 +51,9 @@ class Customer:
         self._status = "CLOSED"
 
     def availability(self):
-        return legacy_l4_customer_availability(self)
+        if self.status != 'ACTIVE':
+            return CheckResult(False, 'CUSTOMER_' + ('NOT_ACTIVE' if self.status == 'NEW' else self.status))
+        return CheckResult(True)
 
     def describe(self):
         return f"{self.customer_id}:{self.name}:{self.status}"
-
-
-# ЛР4: временный процедурный путь. Перенесите реализацию в названный метод объекта и удалите эту функцию.
-def legacy_l4_customer_availability(owner):
-    if owner.status != 'ACTIVE':
-        return CheckResult(False, 'CUSTOMER_' + ('NOT_ACTIVE' if owner.status == 'NEW' else owner.status))
-    return CheckResult(True)
