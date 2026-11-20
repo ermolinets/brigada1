@@ -2,12 +2,11 @@ from app.support.types import CheckResult, checked, identifier, choice, boolean,
 from app.support.types import name as valid_name, country as valid_country
 from app.support.errors import DomainError
 from app.domain.customer import Customer
-from app.domain.eligibility import AllowedCategoryRule, AllowedOperationRule
 
 class CustomerService:
     def __init__(self, repository, rules=()):
         self._repository = repository
-        self._rules = [AllowedCategoryRule({"STANDARD", "PREMIUM"}), AllowedOperationRule({"PURCHASE"})]  # конкретные объекты пока создаются здесь
+        self._rules = tuple(rules)
 
     def register(self, entity):
         return self._repository.add(entity)
@@ -25,13 +24,25 @@ class CustomerService:
         self.get(key).close()
 
     def check(self, key, context):
-        raise NotImplementedError("ЛР5: реализуйте CustomerService.check по TASK.md")
+        customer = self.get(key)
+        result = checked(customer.availability())
+        if not result.allowed:
+            return result
+        for rule in self._rules:
+            result = checked(rule.check(customer, context))
+            if not result.allowed:
+                return result
+        return CheckResult(True)
 
     def check_many(self, customer_ids, context):
-        raise NotImplementedError("ЛР5: реализуйте CustomerService.check_many по TASK.md")
+        return tuple((customer_id, self.check(customer_id, context)) for customer_id in customer_ids)
 
     def denial_codes(self, customer_ids, context):
-        raise NotImplementedError("ЛР5: реализуйте CustomerService.denial_codes по TASK.md")
+        return tuple(dict.fromkeys(
+            result.code
+            for _, result in self.check_many(customer_ids, context)
+            if not result.allowed
+        ))
 
 def make_entity(*args, **kwargs):
     return Customer(*args, **kwargs)
