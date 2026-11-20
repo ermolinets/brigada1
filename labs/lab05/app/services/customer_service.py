@@ -24,7 +24,15 @@ class CustomerService:
         self.get(key).close()
 
     def check(self, key, context):
-        raise NotImplementedError("ЛР5: реализуйте CustomerService.check по TASK.md")
+        customer = self.get(key)
+        result = checked(customer.availability())
+        if not result.allowed:
+            return result
+        for rule in self._rules:
+            result = checked(rule.check(customer, context))
+            if not result.allowed:
+                return result
+        return CheckResult(True)
 
     def check_many(self, customer_ids, context):
         return tuple((customer_id, self.check(customer_id, context)) for customer_id in customer_ids)
